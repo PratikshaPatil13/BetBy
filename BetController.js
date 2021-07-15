@@ -1,6 +1,3 @@
-import BetModel from "../models/BetModel"
-import SessionModel from "../models/SessionModel"
-
 const router = Router()
 
 router.post("/exposure", async (req, res) => {
@@ -180,16 +177,86 @@ router.post("/refund", async (req, res) => {
     }
 })
 
-router.get("/Win", (req, res) => {
-    try {
-        // update betStatus to settled and status to win
-        // create account statement on user
-        // get balance
-        // create response object for betby
-        res.status(200).json({ timestamp: moment().unix() })
-    } catch (error) {
-        console.error(error)
-        res.status(500).json(error)
+router.post("/win", async (req, res) => {
+    let reqData = req.body
+    //console.log(reqData)
+    if (reqData && reqData.bet_transaction_id) {
+        try {
+            let accountstatement = await SessionModel.getBetByResult(
+                reqData.transaction.player_id
+            )
+            console.log("acc:", accountstatement)
+
+            let win = await BetModel.getBetWin(reqData.bet_transaction_id)
+            console.log(win)
+            let balance = await SessionModel.getUserBalance(
+                reqData.transaction.player_id
+            )
+            console.log("user balance:::::::::::::::::::::::::::::::", balance)
+            if (balance && balance.value) {
+                let resObj = {
+                    id: win && win.value ? win.data._id : "",
+                    ext_transaction_id: reqData.bet_transaction_id,
+                    parent_transaction_id: null,
+                    user_id: reqData.player_id,
+                    operation: "bet",
+                    amount: reqData.amount,
+                    currency: global.currency,
+                    balance: balance.data.balance
+                }
+                res.status(200).json(resObj)
+            } else {
+                res.status(500).json({
+                    code: win.statusCode,
+                    message: win.message
+                })
+            }
+        } catch (error) {
+            console.error(error)
+            res.status(500).json(error)
+        }
     }
 })
+
+router.post("/lost", async (req, res) => {
+    let reqData = req.body
+    //console.log(reqData)
+    if (reqData && reqData.bet_transaction_id) {
+        try {
+            let accountstatement = await SessionModel.getBetByResult(
+                reqData.transaction.player_id
+            )
+            
+
+            let lost = await BetModel.getBetLost(reqData.bet_transaction_id)
+
+            let balance = await SessionModel.getUserBalance(
+                reqData.transaction.player_id
+            )
+            console.log("user balance:::::::::::::::::::::::::::::::", balance)
+            if (balance && balance.value) {
+                let resObj = {
+                    id: lost && lost.value ? lost.data._id : "",
+                    ext_transaction_id: reqData.bet_transaction_id,
+                    parent_transaction_id: null,
+                    user_id: reqData.player_id,
+                    operation: "bet",
+                    amount: reqData.amount,
+                    currency: global.currency,
+                    balance: balance.data.balance
+                }
+                res.status(200).json(resObj)
+            } else {
+                res.status(500).json({
+                    code: lost.statusCode,
+                    message: lost.message
+                })
+            }
+        } catch (error) {
+            console.error(error)
+            res.status(500).json(error)
+        }
+    }
+})
+
 export default router

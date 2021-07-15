@@ -208,5 +208,73 @@ export default {
                 statusCode: 403
             }
         }
+    },
+    getBetWin: async function (transactionBetId) {
+        try {
+            let win = await Bet.findOneAndUpdate(
+                {
+                    "transaction.id": transactionBetId
+                },
+                { $set: { status: "Won", betStatus: "settled" } },
+                { new: true }
+            )
+            if (win) {
+                return {
+                    value: true,
+                    data: win,
+                    message: "",
+                    statusCode: 200
+                }
+            } else {
+                return {
+                    value: false,
+                    data: win,
+                    message: "Parent transaction not found",
+                    statusCode: 2003
+                }
+            }
+        } catch (error) {
+            return {
+                value: false,
+                data: error,
+                message: "TransactionId is not found",
+                statusCode: 403
+            }
+        }
+    },
+    getBetLost: async function (transactionBetId) {
+        try {
+            let lost = await Bet.findOneAndUpdate(
+                {
+                    "transaction.id": transactionBetId
+                },
+                { $set: { status: "Lost", betStatus: "settled" } },
+                { new: true }
+            )
+            if (lost) {
+                return {
+                    value: true,
+                    data: lost,
+                    message: "",
+                    statusCode: 200
+                }
+            } else {
+                return {
+                    value: false,
+                    data: lost,
+                    message: "Parent transaction not found",
+                    statusCode: 2003
+                }
+            }
+        } catch (error) {
+            return {
+                value: false,
+                data: error,
+                message: "TransactionId is not found",
+                statusCode: 403
+            }
+        }
     }
 }
+
+
